@@ -1,32 +1,36 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
-name: QrInfoProduct
+name: Publish to NPM
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main           # Pubblica su ogni push su 'main'
+    tags:
+      - 'v*'           # Pubblica se un tag con formato 'v1.0.0' viene creato
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
 
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+          node-version: '16'  # Puoi scegliere la versione di Node.js che preferisci
+          registry-url: 'https://registry.npmjs.org'  # URL del registro NPM
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test  # Aggiungi un comando per eseguire i test, se hai una suite di test
+
+      - name: Build the project
+        run: npm run build  # Aggiungi il comando per costruire il progetto se necessario
+
+      - name: Publish package to NPM
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public  # Usa 'public' per pacchetti pubblici, 'restricted' per pacchetti privati
